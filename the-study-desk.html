@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Study Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --paper:#F6F1E4;
+    --paper-dim:#EFE7D3;
+    --ink:#2B2A28;
+    --ink-soft:#5B564C;
+    --kraft:#8A6E4B;
+    --kraft-light:#C9B393;
+    --pine:#3E6259;
+    --pine-light:#E4ECE7;
+    --brick:#B0433D;
+    --brick-light:#F3E1DE;
+    --line: rgba(43,42,40,0.14);
+    --shadow: 0 1px 0 rgba(43,42,40,0.06), 0 8px 24px -12px rgba(43,42,40,0.28);
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(138,110,75,0.07), transparent),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    min-height:100vh;
+  }
+  ::selection{ background: var(--kraft-light); }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em; }
+  a{color:inherit;}
+
+  /* ---------- Shell ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns: 240px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width: 860px){
+    .shell{ grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Rail ---------- */
+  .rail{
+    background: var(--paper-dim);
+    border-right:1px solid var(--line);
+    padding: 28px 0 24px;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  @media (max-width: 860px){
+    .rail{ position:static; height:auto; border-right:none; border-bottom:1px solid var(--line); }
+  }
+  .brand{
+    padding: 0 24px 22px;
+    border-bottom:1px solid var(--line);
+    margin-bottom: 6px;
+  }
+  .brand .stamp{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--kraft);
+    border:1px solid var(--kraft);
+    padding:2px 6px;
+    border-radius:2px;
+    transform: rotate(-2deg);
+    margin-bottom:10px;
+  }
+  .brand h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    line-height:1.15;
+    margin:0;
+    font-optical-sizing: auto;
+  }
+  .brand p{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin:8px 0 0;
+  }
+
+  .tabs{ list-style:none; margin:14px 0 0; padding:0; flex:1; }
+  .tab{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:13px 24px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.03em;
+    color:var(--ink-soft);
+    border-left:3px solid transparent;
+    position:relative;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tab .idx{ color:var(--kraft-light); font-size:11px; width:16px; }
+  .tab:hover{ background: rgba(138,110,75,0.08); color:var(--ink); }
+  .tab.active{
+    background: var(--paper);
+    color:var(--ink);
+    border-left-color: var(--kraft);
+    font-weight:600;
+  }
+  .tab.active .idx{ color:var(--kraft); }
+
+  .rail-foot{
+    padding: 16px 24px 0;
+    border-top:1px solid var(--line);
+    margin-top:10px;
+  }
+  .deck-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .deck-count b{ color:var(--pine); font-size:15px; }
+
+  /* ---------- Main ---------- */
+  main{ padding: 40px 48px 80px; max-width: 920px; }
+  @media (max-width: 640px){ main{ padding: 28px 18px 60px; } }
+
+  .panel{ display:none; animation: fadein .25s ease; }
+  .panel.active{ display:block; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  h2.section-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:30px;
+    margin:0 0 4px;
+  }
+  .section-sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:0 0 28px;
+  }
+
+  .card-frame{
+    background: var(--paper);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  /* ---------- Manage deck ---------- */
+  .manage-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap:10px;
+    padding:16px;
+    border-bottom:1px solid var(--line);
+  }
+  @media (max-width:640px){ .manage-row{ grid-template-columns: 1fr; } }
+  input[type="text"], textarea, select{
+    font-family:'Source Serif 4', serif;
+    font-size:14px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:2px;
+    background: var(--paper-dim);
+    color:var(--ink);
+    width:100%;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus{
+    outline:2px solid var(--kraft);
+    outline-offset:1px;
+    background: var(--paper);
+  }
+  button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    cursor:pointer;
+    border-radius:2px;
+    border:1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    padding:10px 16px;
+    transition: transform .1s ease, opacity .15s ease;
+  }
+  button:hover{ opacity:0.85; }
+  button:active{ transform: translateY(1px); }
+  button:focus-visible, .tab:focus-visible, .flashcard:focus-visible, .choice:focus-visible{
+    outline:2px solid var(--kraft);
+    outline-offset:2px;
+  }
+  button.ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line);
+  }
+  button.pine{ background:var(--pine); border-color:var(--pine); }
+  button.brick{ background:var(--brick); border-color:var(--brick); }
+  button.small{ padding:6px 10px; font-size:11px; }
+
+  .deck-list{ max-height: 320px; overflow-y:auto; }
+  .deck-item{
+    display:grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap:10px;
+    align-items:center;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+  }
+  .deck-item:last-child{ border-bottom:none; }
+  .deck-item .q{ color:var(--ink); }
+  .deck-item .a{ color:var(--ink-soft); }
+  .deck-item button{ padding:5px 9px; font-size:10px; }
+  .empty-note{
+    padding: 34px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    line-height:1.7;
+  }
+
+  /* ---------- Flashcards ---------- */
+  .card-stage{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 30px 20px 10px;
+  }
+  .card-progress{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+  }
+  .flashcard{
+    width:100%;
+    max-width:520px;
+    height:280px;
+    perspective:1400px;
+    cursor:pointer;
+  }
+  .flashcard-inner{
+    position:relative;
+    width:100%; height:100%;
+    transform-style:preserve-3d;
+    transition: transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .flashcard.flipped .flashcard-inner{ transform: rotateY(180deg); }
+  .face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+    text-align:center;
+  }
+  .face .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--kraft);
+    margin-bottom:14px;
+  }
+  .face .content{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:22px;
+    line-height:1.4;
+  }
+  .face.back{
+    transform: rotateY(180deg);
+    background: var(--pine-light);
+  }
+  .face.back .eyebrow{ color:var(--pine); }
+  .flashcard-hint{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:14px;
+  }
+  .card-controls{
+    display:flex;
+    gap:10px;
+    margin-top:24px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:16px 20px;
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .quiz-body{ padding:28px 24px 30px; }
+  .quiz-question{
+    font-family:'Fraunces', serif;
+    font-size:21px;
+    font-weight:500;
+    margin: 0 0 22px;
+    line-height:1.4;
+  }
+  .choices{ display:flex; flex-direction:column; gap:10px; }
+  .choice{
+    text-align:left;
+    background: var(--paper-dim);
+    border:1px solid var(--line);
+    color:var(--ink);
+    text-transform:none;
+    font-family:'Source Serif 4', serif;
+    font-size:14.5px;
+    padding:13px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .choice .letter{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--kraft);
+    border:1px solid var(--kraft-light);
+    width:22px; height:22px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .choice:hover:not(:disabled){ background: var(--paper); border-color:var(--kraft-light); }
+  .choice.correct{ background: var(--pine-light); border-color:var(--pine); }
+  .choice.correct .letter{ background:var(--pine); color:#fff; border-color:var(--pine); }
+  .choice.wrong{ background: var(--brick-light); border-color:var(--brick); }
+  .choice.wrong .letter{ background:var(--brick); color:#fff; border-color:var(--brick); }
+  .choice:disabled{ cursor:default; }
+  .quiz-feedback{
+    margin-top:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    min-height:18px;
+  }
+  .quiz-feedback.ok{ color:var(--pine); }
+  .quiz-feedback.no{ color:var(--brick); }
+  .quiz-next{ margin-top:18px; display:flex; justify-content:flex-end; }
+  .quiz-result{
+    text-align:center;
+    padding:50px 20px;
+  }
+  .quiz-result .score{
+    font-family:'Fraunces', serif;
+    font-size:56px;
+    font-weight:600;
+    color:var(--pine);
+  }
+  .quiz-result p{ color:var(--ink-soft); font-family:'IBM Plex Mono', monospace; font-size:12.5px; }
+
+  /* ---------- Timer ---------- */
+  .timer-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 40px 20px 34px;
+  }
+  .timer-modes{
+    display:flex;
+    gap:8px;
+    margin-bottom:30px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+  }
+  .mode-btn{
+    padding:7px 13px;
+    border:1px solid var(--line);
+    background:var(--paper-dim);
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .mode-btn.active{ background: var(--ink); color:var(--paper); border-color:var(--ink); }
+
+  .timer-dial{
+    position:relative;
+    width:240px; height:240px;
+    margin-bottom:26px;
+  }
+  .timer-dial svg{ transform: rotate(-90deg); }
+  .timer-dial .track{ fill:none; stroke: var(--line); stroke-width:6; }
+  .timer-dial .progress{ fill:none; stroke: var(--kraft); stroke-width:6; stroke-linecap:round; transition: stroke-dashoffset 1s linear; }
+  .timer-time{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif;
+    font-size:44px;
+    font-weight:600;
+  }
+  .timer-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+  }
+  .timer-controls{ display:flex; gap:10px; }
+  .timer-stats{
+    margin-top:30px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+    width:100%;
+    max-width:340px;
+    display:flex;
+    justify-content:space-around;
+    text-align:center;
+  }
+  .timer-stats .num{ font-family:'Fraunces', serif; font-size:26px; font-weight:600; color:var(--pine); }
+  .timer-stats .lbl{ font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.08em; }
+
+  /* ---------- Progress ---------- */
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background: var(--line);
+    border:1px solid var(--line);
+    margin-bottom:24px;
+  }
+  @media (max-width:640px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .stat-cell{
+    background: var(--paper);
+    padding:20px 16px;
+  }
+  .stat-cell .num{ font-family:'Fraunces', serif; font-size:30px; font-weight:600; }
+  .stat-cell .lbl{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+
+  .log-frame{ padding: 4px 0; }
+  .log-head{
+    padding:14px 20px;
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .log-row{
+    display:grid;
+    grid-template-columns: 100px 1fr auto;
+    gap:12px;
+    padding:12px 20px;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    align-items:center;
+  }
+  .log-row:last-child{ border-bottom:none; }
+  .log-row .date{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft); }
+  .log-row .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    padding:2px 7px;
+    border-radius:2px;
+    justify-self:end;
+  }
+  .tag.quiz{ background: var(--pine-light); color:var(--pine); }
+  .tag.focus{ background: var(--kraft-light); color:var(--kraft); }
+
+  /* ---------------- Sign-in gate ---------------- */
+  #signinGate{
+    position:fixed; inset:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(138,110,75,0.09), transparent),
+      var(--paper);
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .signin-card{
+    background: var(--paper);
+    border:1px solid var(--line);
+    border-radius:6px;
+    box-shadow: var(--shadow);
+    max-width:380px;
+    width:100%;
+    padding:40px 34px 34px;
+    text-align:center;
+  }
+  .signin-card .stamp{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--kraft);
+    border:1px solid var(--kraft);
+    padding:2px 6px;
+    border-radius:2px;
+    transform: rotate(-2deg);
+    margin-bottom:14px;
+  }
+  .signin-card h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:26px;
+    margin:0 0 8px;
+  }
+  .signin-card p.desc{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.7;
+    margin:0 0 28px;
+  }
+  #googleBtnWrap{
+    display:flex;
+    justify-content:center;
+    margin-bottom:16px;
+    min-height:44px;
+  }
+  .signin-divider{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:18px 0;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .signin-divider::before, .signin-divider::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background: var(--line);
+  }
+  .signin-card button.guest-btn{
+    width:100%;
+  }
+  .signin-note{
+    margin-top:20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+
+  /* ---------------- User greeting in rail ---------------- */
+  .user-badge{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:0 24px 16px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:14px;
+  }
+  .user-badge img{
+    width:30px; height:30px;
+    border-radius:50%;
+    border:1px solid var(--line);
+  }
+  .user-badge .avatar-fallback{
+    width:30px; height:30px;
+    border-radius:50%;
+    background: var(--kraft-light);
+    color: var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:600;
+  }
+  .user-badge .who{ flex:1; min-width:0; }
+  .user-badge .who .name{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .user-badge .who .signout{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none; border:none; padding:0;
+    text-transform:none;
+  }
+
+  /* reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="signinGate">
+  <div class="signin-card">
+    <span class="stamp">EST. TODAY</span>
+    <h2>The Study Desk</h2>
+    <p class="desc">// sign in to personalize your desk, or jump straight in as a guest</p>
+    <div id="googleBtnWrap"></div>
+    <div class="signin-divider">or</div>
+    <button class="guest-btn ghost" id="guestBtn">Continue without signing in</button>
+    <p class="signin-note">Signing in just personalizes your greeting — your deck and progress are still saved locally in this browser either way, not in the cloud.</p>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="rail">
+    <div class="brand">
+      <span class="stamp">EST. TODAY</span>
+      <h1>The Study Desk</h1>
+      <p>one deck. four ways to learn it.</p>
+      <p style="margin-top:4px; opacity:0.75;">made by Owen Tan</p>
+    </div>
+    <div id="userBadgeWrap"></div>
+    <ul class="tabs">
+      <li class="tab active" data-panel="manage"><span class="idx">01</span> Build deck</li>
+      <li class="tab" data-panel="cards"><span class="idx">02</span> Flashcards</li>
+      <li class="tab" data-panel="quiz"><span class="idx">03</span> Quiz</li>
+      <li class="tab" data-panel="timer"><span class="idx">04</span> Focus timer</li>
+      <li class="tab" data-panel="progress"><span class="idx">05</span> Progress</li>
+    </ul>
+    <div class="rail-foot">
+      <div class="deck-count">cards in deck &nbsp;<b id="railCount">0</b></div>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ================= MANAGE DECK ================= -->
+    <section class="panel active" id="panel-manage">
+      <h2 class="section-title">Build your deck</h2>
+      <p class="section-sub">// add a term and its definition, one at a time — this deck powers everything else here</p>
+      <div class="card-frame">
+        <div class="manage-row">
+          <input type="text" id="inputQ" placeholder="Term or question">
+          <input type="text" id="inputA" placeholder="Definition or answer">
+          <button id="addCardBtn">Add card</button>
+        </div>
+        <div class="deck-list" id="deckList">
+          <div class="empty-note">Your deck is empty.<br>Add your first card above to begin.</div>
+        </div>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="ghost small" id="loadSampleBtn">Load a sample deck</button>
+        <button class="ghost small brick" id="clearDeckBtn" style="border-color:var(--brick); color:var(--brick); background:transparent;">Clear deck</button>
+        <button class="ghost small" id="resetAllBtn" title="Erases saved deck, quiz history, and focus stats from this browser">Reset all saved data</button>
+      </div>
+    </section>
+
+    <!-- ================= FLASHCARDS ================= -->
+    <section class="panel" id="panel-cards">
+      <h2 class="section-title">Flashcards</h2>
+      <p class="section-sub">// click the card to flip it, then grade yourself honestly</p>
+      <div class="card-frame">
+        <div class="card-stage" id="cardStage">
+          <div class="empty-note">No cards yet. Head to <b>Build deck</b> to add some.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= QUIZ ================= -->
+    <section class="panel" id="panel-quiz">
+      <h2 class="section-title">Quiz</h2>
+      <p class="section-sub">// multiple choice, pulled straight from your deck</p>
+      <div class="card-frame" id="quizFrame">
+        <div class="empty-note" style="padding:40px 20px;">You need at least 4 cards in your deck to generate a quiz.</div>
+      </div>
+    </section>
+
+    <!-- ================= TIMER ================= -->
+    <section class="panel" id="panel-timer">
+      <h2 class="section-title">Focus timer</h2>
+      <p class="section-sub">// classic pomodoro: 25 on, 5 off — or set your own</p>
+      <div class="card-frame">
+        <div class="timer-wrap">
+          <div class="timer-modes">
+            <button class="mode-btn active" data-mins="25" data-mode="Focus">25 · focus</button>
+            <button class="mode-btn" data-mins="5" data-mode="Short break">5 · short break</button>
+            <button class="mode-btn" data-mins="15" data-mode="Long break">15 · long break</button>
+          </div>
+          <div class="timer-dial">
+            <svg width="240" height="240" viewBox="0 0 240 240">
+              <circle class="track" cx="120" cy="120" r="108"></circle>
+              <circle class="progress" id="timerRing" cx="120" cy="120" r="108" stroke-dasharray="678.6" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="timer-time" id="timerTime">25:00</div>
+          </div>
+          <div class="timer-label" id="timerModeLabel">Focus session</div>
+          <div class="timer-controls">
+            <button id="timerStart" class="pine">Start</button>
+            <button id="timerReset" class="ghost">Reset</button>
+          </div>
+          <div class="timer-stats">
+            <div>
+              <div class="num" id="sessionsToday">0</div>
+              <div class="lbl">sessions today</div>
+            </div>
+            <div>
+              <div class="num" id="minutesToday">0</div>
+              <div class="lbl">focus minutes today</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PROGRESS ================= -->
+    <section class="panel" id="panel-progress">
+      <h2 class="section-title">Progress</h2>
+      <p class="section-sub">// a running record of your study sessions</p>
+      <div class="stat-grid">
+        <div class="stat-cell"><div class="num" id="statCards">0</div><div class="lbl">cards in deck</div></div>
+        <div class="stat-cell"><div class="num" id="statQuizzes">0</div><div class="lbl">quizzes taken</div></div>
+        <div class="stat-cell"><div class="num" id="statAccuracy">—</div><div class="lbl">avg. accuracy</div></div>
+        <div class="stat-cell"><div class="num" id="statFocusTotal">0</div><div class="lbl">total focus minutes</div></div>
+      </div>
+      <div class="card-frame log-frame">
+        <div class="log-head">Activity log</div>
+        <div id="logList">
+          <div class="empty-note">Nothing logged yet — take a quiz or complete a focus session.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- State ---------------- */
+  const state = {
+    deck: [],               // {q, a}
+    cardIndex: 0,
+    flipped: false,
+    quiz: { questions: [], i: 0, score: 0, answered: false, active: false },
+    timer: { mins: 25, mode: "Focus", secondsLeft: 25*60, running: false, intervalId: null, totalSeconds: 25*60 },
+    stats: { sessionsToday: 0, minutesToday: 0, quizzesTaken: 0, accuracySum: 0, focusTotal: 0, log: [] },
+    user: null
+  };
+
+  const GOOGLE_CLIENT_ID = "896944001396-buhu16jfe96d0r6g3811094nt28apn1g.apps.googleusercontent.com";
+  const USER_KEY = "studyDesk:user";
+  const GUEST_KEY = "studyDesk:guest";
+
+  function decodeJwt(token){
+    const payload = token.split(".")[1];
+    const base64 = payload.replace(/-/g,"+").replace(/_/g,"/");
+    return JSON.parse(decodeURIComponent(atob(base64).split("").map(c=>
+      "%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)
+    ).join("")));
+  }
+
+  function handleCredentialResponse(response){
+    try{
+      const data = decodeJwt(response.credential);
+      state.user = { name: data.name, email: data.email, picture: data.picture };
+      localStorage.setItem(USER_KEY, JSON.stringify(state.user));
+      localStorage.removeItem(GUEST_KEY);
+    }catch(err){
+      console.warn("Could not read Google sign-in response:", err);
+    }
+    enterApp();
+  }
+  window.handleCredentialResponse = handleCredentialResponse;
+
+  function initGoogleSignIn(){
+    if(!window.google || !google.accounts || !google.accounts.id) return;
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse,
+      auto_select: false
+    });
+    const wrap = document.getElementById("googleBtnWrap");
+    if(wrap){
+      google.accounts.id.renderButton(wrap, {
+        theme:"outline", size:"large", shape:"pill", width:280, text:"signin_with"
+      });
+    }
+  }
+
+  document.getElementById("guestBtn").addEventListener("click", ()=>{
+    localStorage.setItem(GUEST_KEY, "1");
+    enterApp();
+  });
+
+  function renderUserBadge(){
+    const wrap = document.getElementById("userBadgeWrap");
+    if(!state.user){ wrap.innerHTML = ""; return; }
+    const initials = state.user.name ? state.user.name.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase() : "?";
+    wrap.innerHTML = `
+      <div class="user-badge">
+        ${state.user.picture
+          ? `<img src="${state.user.picture}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'avatar-fallback',textContent:'${initials}'}))">`
+          : `<div class="avatar-fallback">${initials}</div>`}
+        <div class="who">
+          <div class="name">${escapeHtml(state.user.name || "")}</div>
+          <button class="signout" id="signOutBtn">Sign out</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("signOutBtn").addEventListener("click", signOut);
+  }
+
+  function signOut(){
+    state.user = null;
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(GUEST_KEY);
+    if(window.google && google.accounts && google.accounts.id){
+      google.accounts.id.disableAutoSelect();
+    }
+    renderUserBadge();
+    document.getElementById("signinGate").style.display = "flex";
+  }
+
+  function enterApp(){
+    document.getElementById("signinGate").style.display = "none";
+    renderUserBadge();
+  }
+
+  function checkExistingSession(){
+    try{
+      const savedUser = localStorage.getItem(USER_KEY);
+      const guest = localStorage.getItem(GUEST_KEY);
+      if(savedUser){
+        state.user = JSON.parse(savedUser);
+        enterApp();
+      } else if(guest){
+        enterApp();
+      }
+      // otherwise the gate stays visible until the user picks an option
+    }catch(err){
+      console.warn("Could not check saved session:", err);
+    }
+  }
+
+  const RING_CIRC = 2 * Math.PI * 108;
+
+  /* ---------------- Autosave (localStorage) ---------------- */
+  const STORAGE_KEY = "studyDesk:v1";
+  let saveTimeout = null;
+
+  function saveState(){
+    // debounce so rapid actions don't hammer storage
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(()=>{
+      try{
+        const payload = {
+          deck: state.deck,
+          stats: state.stats,
+          savedDate: new Date().toDateString()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        flashSaveIndicator();
+      }catch(err){
+        console.warn("Autosave failed (this is expected inside Claude's in-chat preview; it will work once the file is opened directly or hosted):", err);
+      }
+    }, 200);
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const payload = JSON.parse(raw);
+      if(Array.isArray(payload.deck)) state.deck = payload.deck;
+      if(payload.stats){
+        state.stats = Object.assign(state.stats, payload.stats);
+        // reset "today" counters if the save is from a previous day
+        if(payload.savedDate !== new Date().toDateString()){
+          state.stats.sessionsToday = 0;
+          state.stats.minutesToday = 0;
+        }
+      }
+    }catch(err){
+      console.warn("Could not load saved data:", err);
+    }
+  }
+
+  function flashSaveIndicator(){
+    let el = document.getElementById("saveIndicator");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "saveIndicator";
+      el.className = "mono";
+      el.style.cssText = "position:fixed; bottom:16px; right:20px; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--pine); background:var(--pine-light); padding:5px 10px; border-radius:2px; opacity:0; transition:opacity .3s ease; pointer-events:none; z-index:50;";
+      el.textContent = "Saved";
+      document.body.appendChild(el);
+    }
+    el.style.opacity = "1";
+    clearTimeout(el._hideTimeout);
+    el._hideTimeout = setTimeout(()=>{ el.style.opacity = "0"; }, 1200);
+  }
+
+  /* ---------------- Utility ---------------- */
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+  function fmtTime(s){
+    const m = Math.floor(s/60).toString().padStart(2,"0");
+    const sec = (s%60).toString().padStart(2,"0");
+    return m+":"+sec;
+  }
+  function todayStr(){
+    return new Date().toLocaleDateString(undefined,{month:"short", day:"numeric"});
+  }
+
+  /* ---------------- Tabs ---------------- */
+  const tabs = document.querySelectorAll(".tab");
+  const panels = document.querySelectorAll(".panel");
+  tabs.forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      tabs.forEach(t=>t.classList.remove("active"));
+      panels.forEach(p=>p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("panel-"+tab.dataset.panel).classList.add("active");
+      if(tab.dataset.panel==="cards") renderFlashcards();
+      if(tab.dataset.panel==="quiz") renderQuizIntro();
+      if(tab.dataset.panel==="progress") renderProgress();
+    });
+  });
+
+  /* ---------------- Deck management ---------------- */
+  const inputQ = document.getElementById("inputQ");
+  const inputA = document.getElementById("inputA");
+  const addCardBtn = document.getElementById("addCardBtn");
+  const deckList = document.getElementById("deckList");
+  const railCount = document.getElementById("railCount");
+
+  function addCard(q,a){
+    if(!q.trim() || !a.trim()) return;
+    state.deck.push({q:q.trim(), a:a.trim()});
+    renderDeckList();
+    saveState();
+  }
+
+  addCardBtn.addEventListener("click", ()=>{
+    addCard(inputQ.value, inputA.value);
+    inputQ.value=""; inputA.value="";
+    inputQ.focus();
+  });
+  [inputQ, inputA].forEach(el=>{
+    el.addEventListener("keydown", e=>{
+      if(e.key==="Enter"){ e.preventDefault(); addCardBtn.click(); }
+    });
+  });
+
+  document.getElementById("loadSampleBtn").addEventListener("click", ()=>{
+    const sample = [
+      {q:"Mitochondria", a:"The organelle that produces ATP through cellular respiration — the 'powerhouse of the cell'."},
+      {q:"Photosynthesis", a:"The process by which plants convert light energy into chemical energy, producing glucose and oxygen."},
+      {q:"Newton's First Law", a:"An object stays at rest or in uniform motion unless acted on by an unbalanced force."},
+      {q:"Supply and demand", a:"An economic model where price is determined by the relationship between how much of a good is available and how much people want it."},
+      {q:"Photosynthesis equation", a:"6CO2 + 6H2O + light energy → C6H12O6 + 6O2"},
+      {q:"Renaissance", a:"A period of European cultural, artistic, and intellectual revival, roughly 14th–17th century."},
+      {q:"Mitosis", a:"Cell division that produces two genetically identical daughter cells."},
+      {q:"Osmosis", a:"The movement of water molecules through a semi-permeable membrane from low to high solute concentration."}
+    ];
+    state.deck = state.deck.concat(sample);
+    renderDeckList();
+    saveState();
+  });
+
+  document.getElementById("clearDeckBtn").addEventListener("click", ()=>{
+    if(state.deck.length && !confirm("Clear all cards from your deck? This can't be undone.")) return;
+    state.deck = [];
+    renderDeckList();
+    saveState();
+  });
+
+  document.getElementById("resetAllBtn").addEventListener("click", ()=>{
+    if(!confirm("This erases your saved deck, quiz history, and focus stats from this browser. Continue?")) return;
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(err){}
+    location.reload();
+  });
+
+  function renderDeckList(){
+    railCount.textContent = state.deck.length;
+    document.getElementById("statCards").textContent = state.deck.length;
+    if(state.deck.length === 0){
+      deckList.innerHTML = '<div class="empty-note">Your deck is empty.<br>Add your first card above to begin.</div>';
+      return;
+    }
+    deckList.innerHTML = state.deck.map((c,i)=>`
+      <div class="deck-item">
+        <div class="q">${escapeHtml(c.q)}</div>
+        <div class="a">${escapeHtml(c.a)}</div>
+        <button class="ghost small" data-remove="${i}">Remove</button>
+      </div>
+    `).join("");
+    deckList.querySelectorAll("[data-remove]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        state.deck.splice(parseInt(btn.dataset.remove),1);
+        renderDeckList();
+        saveState();
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  /* ---------------- Flashcards ---------------- */
+  const cardStage = document.getElementById("cardStage");
+
+  function renderFlashcards(){
+    if(state.deck.length === 0){
+      cardStage.innerHTML = '<div class="empty-note">No cards yet. Head to <b>Build deck</b> to add some.</div>';
+      return;
+    }
+    if(state.cardIndex >= state.deck.length) state.cardIndex = 0;
+    const card = state.deck[state.cardIndex];
+    cardStage.innerHTML = `
+      <div class="card-progress">card ${state.cardIndex+1} of ${state.deck.length}</div>
+      <div class="flashcard" id="flashcardEl" tabindex="0" role="button" aria-label="Flashcard, click to flip">
+        <div class="flashcard-inner">
+          <div class="face front">
+            <div class="eyebrow">Term</div>
+            <div class="content">${escapeHtml(card.q)}</div>
+          </div>
+          <div class="face back">
+            <div class="eyebrow">Definition</div>
+            <div class="content">${escapeHtml(card.a)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="flashcard-hint">click the card, or press space, to flip it</div>
+      <div class="card-controls">
+        <button class="ghost" id="prevCardBtn">← Previous</button>
+        <button class="ghost" id="shuffleCardsBtn">Shuffle</button>
+        <button class="ghost" id="nextCardBtn">Next →</button>
+      </div>
+    `;
+    const flashcardEl = document.getElementById("flashcardEl");
+    flashcardEl.addEventListener("click", ()=> flashcardEl.classList.toggle("flipped"));
+    flashcardEl.addEventListener("keydown", e=>{
+      if(e.key===" "||e.key==="Enter"){ e.preventDefault(); flashcardEl.classList.toggle("flipped"); }
+    });
+    document.getElementById("prevCardBtn").addEventListener("click", ()=>{
+      state.cardIndex = (state.cardIndex - 1 + state.deck.length) % state.deck.length;
+      renderFlashcards();
+    });
+    document.getElementById("nextCardBtn").addEventListener("click", ()=>{
+      state.cardIndex = (state.cardIndex + 1) % state.deck.length;
+      renderFlashcards();
+    });
+    document.getElementById("shuffleCardsBtn").addEventListener("click", ()=>{
+      state.deck = shuffle(state.deck);
+      state.cardIndex = 0;
+      renderFlashcards();
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  const quizFrame = document.getElementById("quizFrame");
+
+  function renderQuizIntro(){
+    if(state.deck.length < 4){
+      quizFrame.innerHTML = '<div class="empty-note" style="padding:40px 20px;">You need at least 4 cards in your deck to generate a quiz.</div>';
+      return;
+    }
+    quizFrame.innerHTML = `
+      <div style="padding:40px 24px; text-align:center;">
+        <div class="mono" style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;">${state.deck.length} cards available</div>
+        <p style="font-family:'Fraunces',serif; font-size:19px; margin:0 0 22px;">Ready to test yourself?</p>
+        <button class="pine" id="startQuizBtn">Start quiz</button>
+      </div>
+    `;
+    document.getElementById("startQuizBtn").addEventListener("click", startQuiz);
+  }
+
+  function startQuiz(){
+    const pool = shuffle(state.deck);
+    const questions = pool.map(card=>{
+      const wrongPool = shuffle(state.deck.filter(c=>c!==card)).slice(0,3).map(c=>c.a);
+      const options = shuffle([card.a, ...wrongPool]);
+      return { q: card.q, correct: card.a, options };
+    });
+    state.quiz = { questions, i:0, score:0, answered:false, active:true };
+    renderQuizQuestion();
+  }
+
+  function renderQuizQuestion(){
+    const qz = state.quiz;
+    if(qz.i >= qz.questions.length){
+      renderQuizResult();
+      return;
+    }
+    const q = qz.questions[qz.i];
+    const letters = ["A","B","C","D"];
+    quizFrame.innerHTML = `
+      <div class="quiz-head">
+        <span>question ${qz.i+1} / ${qz.questions.length}</span>
+        <span>score ${qz.score}</span>
+      </div>
+      <div class="quiz-body">
+        <div class="quiz-question">${escapeHtml(q.q)}</div>
+        <div class="choices" id="choicesWrap">
+          ${q.options.map((opt,idx)=>`
+            <button class="choice" data-answer="${escapeHtml(opt)}">
+              <span class="letter">${letters[idx]}</span>
+              <span>${escapeHtml(opt)}</span>
+            </button>
+          `).join("")}
+        </div>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+        <div class="quiz-next" id="quizNextWrap"></div>
+      </div>
+    `;
+    document.querySelectorAll(".choice").forEach(btn=>{
+      btn.addEventListener("click", ()=> handleAnswer(btn, q));
+    });
+  }
+
+  function handleAnswer(btn, q){
+    if(state.quiz.answered) return;
+    state.quiz.answered = true;
+    const chosen = btn.dataset.answer;
+    const feedback = document.getElementById("quizFeedback");
+    document.querySelectorAll(".choice").forEach(c=>{
+      c.disabled = true;
+      if(c.dataset.answer === q.correct) c.classList.add("correct");
+      else if(c === btn) c.classList.add("wrong");
+    });
+    if(chosen === q.correct){
+      state.quiz.score++;
+      feedback.textContent = "correct.";
+      feedback.className = "quiz-feedback ok";
+    } else {
+      feedback.textContent = "not quite — correct answer highlighted above.";
+      feedback.className = "quiz-feedback no";
+    }
+    const nextWrap = document.getElementById("quizNextWrap");
+    const isLast = state.quiz.i === state.quiz.questions.length - 1;
+    nextWrap.innerHTML = `<button id="quizNextBtn">${isLast ? "See results" : "Next question →"}</button>`;
+    document.getElementById("quizNextBtn").addEventListener("click", ()=>{
+      state.quiz.i++;
+      state.quiz.answered = false;
+      renderQuizQuestion();
+    });
+  }
+
+  function renderQuizResult(){
+    const qz = state.quiz;
+    const pct = Math.round((qz.score / qz.questions.length) * 100);
+    quizFrame.innerHTML = `
+      <div class="quiz-result">
+        <div class="score">${pct}%</div>
+        <p>${qz.score} of ${qz.questions.length} correct</p>
+        <div class="card-controls" style="margin-top:10px;">
+          <button class="pine" id="retakeQuizBtn">Take another</button>
+          <button class="ghost" id="doneQuizBtn">Done</button>
+        </div>
+      </div>
+    `;
+    // log it
+    state.stats.quizzesTaken++;
+    state.stats.accuracySum += pct;
+    state.stats.log.unshift({ date: todayStr(), type:"quiz", detail:`Scored ${pct}% (${qz.score}/${qz.questions.length})` });
+    saveState();
+    document.getElementById("retakeQuizBtn").addEventListener("click", startQuiz);
+    document.getElementById("doneQuizBtn").addEventListener("click", renderQuizIntro);
+  }
+
+  /* ---------------- Timer ---------------- */
+  const timerTime = document.getElementById("timerTime");
+  const timerRing = document.getElementById("timerRing");
+  const timerModeLabel = document.getElementById("timerModeLabel");
+  const timerStart = document.getElementById("timerStart");
+  const timerReset = document.getElementById("timerReset");
+  const modeBtns = document.querySelectorAll(".mode-btn");
+
+  timerRing.setAttribute("stroke-dasharray", RING_CIRC);
+  timerRing.setAttribute("stroke-dashoffset", 0);
+
+  function updateTimerDisplay(){
+    timerTime.textContent = fmtTime(state.timer.secondsLeft);
+    const frac = state.timer.secondsLeft / state.timer.totalSeconds;
+    timerRing.setAttribute("stroke-dashoffset", RING_CIRC * (1-frac));
+  }
+
+  modeBtns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(state.timer.running) return;
+      modeBtns.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const mins = parseInt(btn.dataset.mins);
+      state.timer.mins = mins;
+      state.timer.secondsLeft = mins*60;
+      state.timer.totalSeconds = mins*60;
+      state.timer.mode = btn.dataset.mode;
+      timerModeLabel.textContent = btn.dataset.mode + " session";
+      updateTimerDisplay();
+    });
+  });
+
+  timerStart.addEventListener("click", ()=>{
+    if(state.timer.running){
+      // pause
+      clearInterval(state.timer.intervalId);
+      state.timer.running = false;
+      timerStart.textContent = "Resume";
+      return;
+    }
+    state.timer.running = true;
+    timerStart.textContent = "Pause";
+    state.timer.intervalId = setInterval(()=>{
+      state.timer.secondsLeft--;
+      updateTimerDisplay();
+      if(state.timer.secondsLeft <= 0){
+        clearInterval(state.timer.intervalId);
+        state.timer.running = false;
+        timerStart.textContent = "Start";
+        completeSession();
+      }
+    }, 1000);
+  });
+
+  timerReset.addEventListener("click", ()=>{
+    clearInterval(state.timer.intervalId);
+    state.timer.running = false;
+    timerStart.textContent = "Start";
+    state.timer.secondsLeft = state.timer.mins*60;
+    state.timer.totalSeconds = state.timer.mins*60;
+    updateTimerDisplay();
+  });
+
+  function completeSession(){
+    if(state.timer.mode === "Focus"){
+      state.stats.sessionsToday++;
+      state.stats.minutesToday += state.timer.mins;
+      state.stats.focusTotal += state.timer.mins;
+      state.stats.log.unshift({ date: todayStr(), type:"focus", detail:`Completed a ${state.timer.mins}-minute focus session` });
+      document.getElementById("sessionsToday").textContent = state.stats.sessionsToday;
+      document.getElementById("minutesToday").textContent = state.stats.minutesToday;
+    } else {
+      state.stats.log.unshift({ date: todayStr(), type:"focus", detail:`Completed a ${state.timer.mins}-minute break` });
+    }
+    saveState();
+    timerTime.textContent = "Done!";
+    setTimeout(()=>{ updateTimerDisplay(); }, 1500);
+  }
+
+  /* ---------------- Progress ---------------- */
+  function renderProgress(){
+    document.getElementById("statCards").textContent = state.deck.length;
+    document.getElementById("statQuizzes").textContent = state.stats.quizzesTaken;
+    document.getElementById("statAccuracy").textContent =
+      state.stats.quizzesTaken ? Math.round(state.stats.accuracySum/state.stats.quizzesTaken)+"%" : "—";
+    document.getElementById("statFocusTotal").textContent = state.stats.focusTotal;
+
+    const logList = document.getElementById("logList");
+    if(state.stats.log.length === 0){
+      logList.innerHTML = '<div class="empty-note">Nothing logged yet — take a quiz or complete a focus session.</div>';
+      return;
+    }
+    logList.innerHTML = state.stats.log.map(entry=>`
+      <div class="log-row">
+        <div class="date">${entry.date}</div>
+        <div>${escapeHtml(entry.detail)}</div>
+        <div class="tag ${entry.type}">${entry.type}</div>
+      </div>
+    `).join("");
+  }
+
+  /* ---------------- Init ---------------- */
+  loadState();
+  updateTimerDisplay();
+  renderDeckList();
+  document.getElementById("sessionsToday").textContent = state.stats.sessionsToday;
+  document.getElementById("minutesToday").textContent = state.stats.minutesToday;
+  checkExistingSession();
+
+  // Google's script loads async, so poll briefly until it's ready
+  (function waitForGoogle(attempts){
+    if(window.google && google.accounts && google.accounts.id){
+      initGoogleSignIn();
+    } else if(attempts > 0){
+      setTimeout(()=>waitForGoogle(attempts-1), 200);
+    }
+  })(25);
+})();
+</script>
+</body>
+</html>
